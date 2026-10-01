@@ -1,0 +1,230 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Mail;
+using System.Text.RegularExpressions;
+using AgendaEmpleados.Models;
+using AgendaEmpleados.Services;
+
+namespace AgendaEmpleados.UI
+{
+    public class ConsolaAgenda
+    {
+        private readonly Agenda agenda = new Agenda();
+
+        public void Ejecutar()
+        {
+            bool salir = false;
+            while (!salir)
+            {
+                MostrarMenu();
+                switch (LeerOpcion())
+                {
+                    case 1: Alta(); break;
+                    case 2: Listado(agenda.ObtenerOrdenados()); break;
+                    case 3: Busqueda(); break;
+                    case 4: Modificar(); break;
+                    case 5: Baja(); break;
+                    case 0:
+                        salir = true;
+                        Console.WriteLine("\nPrograma finalizado. Hasta pronto.");
+                        break;
+                    default:
+                        Console.WriteLine("\nOpcion no valida. Elige un numero del menu.");
+                        Pausar();
+                        break;
+                }
+            }
+        }
+
+        private static void MostrarMenu()
+        {
+            Console.Clear();
+            Console.WriteLine("========================================");
+            Console.WriteLine("          AGENDA DE EMPLEADOS");
+            Console.WriteLine("========================================");
+            Console.WriteLine("1. Alta de empleado");
+            Console.WriteLine("2. Listado de empleados");
+            Console.WriteLine("3. Buscar empleado");
+            Console.WriteLine("4. Modificar empleado");
+            Console.WriteLine("5. Dar de baja empleado");
+            Console.WriteLine("0. Salir");
+            Console.WriteLine("----------------------------------------");
+        }
+
+        private static int LeerOpcion()
+        {
+            Console.Write("Opcion: ");
+            return int.TryParse(Console.ReadLine(), out int opcion) ? opcion : -1;
+        }
+
+        private void Alta()
+        {
+            Console.Clear();
+            Console.WriteLine("--- ALTA DE EMPLEADO ---");
+            string nombre = LeerTextoObligatorio("Nombre: ");
+            string apellidos = LeerTextoObligatorio("Apellidos: ");
+            string telefono = LeerTelefono();
+            string correo = LeerCorreo();
+            string empresa = LeerTextoObligatorio("Empresa: ");
+            agenda.AgregarEmpleado(nombre, apellidos, telefono, correo, empresa);
+            Console.WriteLine("\nEmpleado añadido correctamente.");
+            Pausar();
+        }
+
+        private static void Listado(List<Empleado> empleados)
+        {
+            Console.Clear();
+            Console.WriteLine("--- LISTADO DE EMPLEADOS ---");
+            if (empleados.Count == 0) Console.WriteLine("No hay empleados para mostrar.");
+            else MostrarFilas(empleados);
+            Pausar();
+        }
+
+        private void Busqueda()
+        {
+            Console.Clear();
+            Console.WriteLine("--- BUSQUEDA ---");
+            string texto = LeerTextoObligatorio("Escribe nombre, apellido, empresa, telefono o correo: ");
+            List<Empleado> resultados = agenda.Buscar(texto);
+            if (resultados.Count == 0) Console.WriteLine("No se encontraron coincidencias.");
+            else MostrarFilas(resultados);
+            Pausar();
+        }
+
+        private void Modificar()
+        {
+            Empleado empleado = LocalizarEmpleado("--- MODIFICAR EMPLEADO ---");
+            if (empleado == null) return;
+            Console.WriteLine("Pulsa Enter para conservar el valor actual.");
+            empleado.Nombre = LeerTextoEditable("Nombre", empleado.Nombre);
+            empleado.Apellidos = LeerTextoEditable("Apellidos", empleado.Apellidos);
+            empleado.Telefono = LeerTelefono(empleado.Telefono);
+            empleado.Correo = LeerCorreo(empleado.Correo);
+            empleado.Empresa = LeerTextoEditable("Empresa", empleado.Empresa);
+            Console.WriteLine("\nEmpleado modificado correctamente.");
+            Pausar();
+        }
+
+        private void Baja()
+        {
+            Empleado empleado = LocalizarEmpleado("--- BAJA DE EMPLEADO ---");
+            if (empleado == null) return;
+            Console.Write("Confirma la baja (S/N): ");
+            if ((Console.ReadLine() ?? string.Empty).Trim().Equals("s", StringComparison.OrdinalIgnoreCase))
+            {
+                agenda.Eliminar(empleado);
+                Console.WriteLine("Empleado eliminado correctamente.");
+            }
+            else Console.WriteLine("Operacion cancelada.");
+            Pausar();
+        }
+
+        private Empleado LocalizarEmpleado(string titulo)
+        {
+            Console.Clear();
+            Console.WriteLine(titulo);
+            string texto = LeerTextoObligatorio("Busca por nombre, apellido, empresa o ID: ");
+            List<Empleado> resultados;
+            if (int.TryParse(texto, out int id))
+            {
+                Empleado empleado = agenda.ObtenerPorId(id);
+                resultados = empleado == null ? new List<Empleado>() : new List<Empleado> { empleado };
+            }
+            else resultados = agenda.Buscar(texto);
+
+            if (resultados.Count == 0)
+            {
+                Console.WriteLine("No existe ningun empleado con ese dato.");
+                Pausar();
+                return null;
+            }
+            MostrarFilas(resultados);
+            if (resultados.Count == 1) return resultados[0];
+            int idElegido = LeerEnteroPositivo("Introduce el ID exacto del empleado: ");
+            Empleado elegido = resultados.FirstOrDefault(empleado => empleado.IdPersona == idElegido);
+            if (elegido == null) Console.WriteLine("El ID no pertenece a los resultados.");
+            return elegido;
+        }
+
+        private static void MostrarFilas(List<Empleado> empleados)
+        {
+            Console.WriteLine("{0,-4} {1,-22} {2,-10} {3,-28} {4}", "ID", "Nombre y apellidos", "Telefono", "Correo", "Empresa");
+            Console.WriteLine(new string('-', 84));
+            foreach (Empleado empleado in empleados)
+            {
+                Console.WriteLine("{0,-4} {1,-22} {2,-10} {3,-28} {4}", empleado.IdPersona,
+                    Ajustar(empleado.Nombre + " " + empleado.Apellidos, 22), empleado.Telefono,
+                    Ajustar(empleado.Correo, 28), empleado.Empresa);
+            }
+        }
+
+        private static string LeerTextoObligatorio(string mensaje)
+        {
+            while (true)
+            {
+                Console.Write(mensaje);
+                string valor = (Console.ReadLine() ?? string.Empty).Trim();
+                if (!string.IsNullOrWhiteSpace(valor)) return valor;
+                Console.WriteLine("El dato no puede estar vacio.");
+            }
+        }
+
+        private static string LeerTelefono(string actual = null)
+        {
+            while (true)
+            {
+                Console.Write("Telefono" + (actual == null ? ": " : " [" + actual + "]: "));
+                string valor = (Console.ReadLine() ?? string.Empty).Trim();
+                if (actual != null && valor == string.Empty) return actual;
+                if (Regex.IsMatch(valor, "^\\d{6}$")) return valor;
+                Console.WriteLine("Telefono no valido: debe contener exactamente 6 digitos.");
+            }
+        }
+
+        private static string LeerCorreo(string actual = null)
+        {
+            while (true)
+            {
+                Console.Write("Correo" + (actual == null ? ": " : " [" + actual + "]: "));
+                string valor = (Console.ReadLine() ?? string.Empty).Trim();
+                if (actual != null && valor == string.Empty) return actual;
+                try
+                {
+                    MailAddress correo = new MailAddress(valor);
+                    if (correo.Address == valor && valor.Contains("@") && valor.IndexOf('@') > 0) return valor;
+                }
+                catch (FormatException) { }
+                Console.WriteLine("Correo no valido: debe tener un formato como nombre@dominio.com.");
+            }
+        }
+
+        private static string LeerTextoEditable(string etiqueta, string actual)
+        {
+            Console.Write(etiqueta + " [" + actual + "]: ");
+            string valor = (Console.ReadLine() ?? string.Empty).Trim();
+            return valor == string.Empty ? actual : valor;
+        }
+
+        private static int LeerEnteroPositivo(string mensaje)
+        {
+            while (true)
+            {
+                Console.Write(mensaje);
+                if (int.TryParse(Console.ReadLine(), out int valor) && valor > 0) return valor;
+                Console.WriteLine("Introduce un ID entero positivo.");
+            }
+        }
+
+        private static string Ajustar(string texto, int longitud)
+        {
+            return texto.Length <= longitud ? texto : texto.Substring(0, longitud - 3) + "...";
+        }
+
+        private static void Pausar()
+        {
+            Console.WriteLine("\nPulsa Enter para continuar...");
+            Console.ReadLine();
+        }
+    }
+}
