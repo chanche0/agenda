@@ -24,8 +24,7 @@ namespace AgendaEmpleados.Services
 
         public List<Empleado> ObtenerOrdenados()
         {
-            return empleados.OrderBy(empleado => empleado.Apellidos)
-                .ThenBy(empleado => empleado.Nombre).ToList();
+            return empleados.OrderBy(empleado => empleado.IdPersona).ToList();
         }
 
         public List<Empleado> Buscar(string texto)
@@ -34,12 +33,38 @@ namespace AgendaEmpleados.Services
                 empleado.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase) ||
                 empleado.Apellidos.Contains(texto, StringComparison.OrdinalIgnoreCase) ||
                 empleado.Telefono.Contains(texto, StringComparison.OrdinalIgnoreCase) ||
-                empleado.Correo.Contains(texto, StringComparison.OrdinalIgnoreCase)).ToList();
+                empleado.Correo.Contains(texto, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(empleado => empleado.IdPersona).ToList();
         }
 
         public Empleado ObtenerPorId(int id)
         {
             return empleados.FirstOrDefault(empleado => empleado.IdPersona == id);
+        }
+
+        public bool AsignarEmpresa(Empleado empleado, Empresa empresa)
+        {
+            if (empleado == null || empresa == null || !empresa.Activa ||
+                !empleados.Contains(empleado) || empleado.Empresa != null)
+                return false;
+
+            empleado.Empresa = empresa;
+            return true;
+        }
+
+        public bool DesvincularEmpresa(Empleado empleado)
+        {
+            if (empleado == null || !empleados.Contains(empleado) || empleado.Empresa == null)
+                return false;
+
+            empleado.Empresa = null;
+            return true;
+        }
+
+        public List<Empleado> ObtenerDeEmpresa(Empresa empresa)
+        {
+            return empleados.Where(empleado => empleado.Empresa == empresa)
+                .OrderBy(empleado => empleado.IdPersona).ToList();
         }
 
         public bool Eliminar(Empleado empleado)

@@ -7,6 +7,7 @@ namespace AgendaEmpleados.Models
         public string Apellidos { get; set; }
         public string Telefono { get; set; }
         public string Correo { get; set; }
+        public Empresa Empresa { get; set; }
 
         public Empleado(int idPersona, string nombre, string apellidos,
             string telefono, string correo)

@@ -8,9 +8,9 @@ namespace AgendaEmpleados
         private static void Main()
         {
             Agenda agenda = new Agenda();
-            Empresas empresas = new Empresas();
+            Empresas empresas = new Empresas(agenda);
             new ConsolaMenuPrincipal(
-                new ConsolaAgenda(agenda),
+                new ConsolaAgenda(agenda, empresas),
                 new ConsolaEmpresas(empresas)).Ejecutar();
         }
     }

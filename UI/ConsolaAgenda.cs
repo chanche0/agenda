@@ -11,10 +11,12 @@ namespace AgendaEmpleados.UI
     public class ConsolaAgenda
     {
         private readonly Agenda agenda;
+        private readonly Empresas empresas;
 
-        public ConsolaAgenda(Agenda agenda)
+        public ConsolaAgenda(Agenda agenda, Empresas empresas)
         {
             this.agenda = agenda;
+            this.empresas = empresas;
         }
 
         public void Ejecutar()
@@ -30,6 +32,9 @@ namespace AgendaEmpleados.UI
                     case 3: Busqueda(); break;
                     case 4: Modificar(); break;
                     case 5: Baja(); break;
+                    case 6: AsignarEmpresa(); break;
+                    case 7: DesvincularEmpresa(); break;
+                    case 8: VerEmpresa(); break;
                     case 0:
                         volver = true;
                         break;
@@ -52,6 +57,9 @@ namespace AgendaEmpleados.UI
             Console.WriteLine("3. Buscar empleado");
             Console.WriteLine("4. Modificar empleado");
             Console.WriteLine("5. Dar de baja empleado");
+            Console.WriteLine("6. Asignar empresa");
+            Console.WriteLine("7. Desvincular empresa");
+            Console.WriteLine("8. Ver empresa de una persona");
             Console.WriteLine("0. Volver al menu principal");
             Console.WriteLine("----------------------------------------");
         }
@@ -120,6 +128,115 @@ namespace AgendaEmpleados.UI
             }
             else Console.WriteLine("Operacion cancelada.");
             Pausar();
+        }
+
+        private void AsignarEmpresa()
+        {
+            do
+            {
+                AsignarEmpresaAEmpleado();
+            }
+            while (PreguntarSiContinuar("¿Quieres asignar una empresa a otra persona? (S/N): "));
+        }
+
+        private void AsignarEmpresaAEmpleado()
+        {
+            Empleado empleado = LocalizarEmpleado("--- ASIGNAR EMPRESA ---");
+            if (empleado == null) return;
+            if (empleado.Empresa != null)
+            {
+                Console.WriteLine("La persona ya pertenece a " + empleado.Empresa.NombreComercial +
+                    ". Desvinculala primero para asignarle otra empresa.");
+                Pausar();
+                return;
+            }
+
+            List<Empresa> activas = empresas.ObtenerActivas();
+            if (activas.Count == 0)
+            {
+                Console.WriteLine("No hay empresas activas para asignar.");
+                Pausar();
+                return;
+            }
+
+            Console.WriteLine("\nEmpresas disponibles:");
+            MostrarEmpresas(activas);
+            int idEmpresa = LeerEnteroPositivo("Introduce el ID de la empresa: ");
+            Empresa empresa = empresas.ObtenerActivaPorId(idEmpresa);
+            if (empresa == null)
+            {
+                Console.WriteLine("El ID no corresponde a una empresa activa.");
+            }
+            else if (agenda.AsignarEmpresa(empleado, empresa))
+            {
+                Console.WriteLine("Empresa asignada correctamente.");
+            }
+            else
+            {
+                Console.WriteLine("No se pudo asignar la empresa. Comprueba que la persona no tenga ya una.");
+            }
+            Pausar();
+        }
+
+        private void DesvincularEmpresa()
+        {
+            do
+            {
+                DesvincularEmpleado();
+            }
+            while (PreguntarSiContinuar("¿Quieres desvincular a otra persona? (S/N): "));
+        }
+
+        private void DesvincularEmpleado()
+        {
+            Empleado empleado = LocalizarEmpleado("--- DESVINCULAR PERSONA ---");
+            if (empleado == null) return;
+            if (empleado.Empresa == null)
+            {
+                Console.WriteLine("La persona no tiene ninguna empresa asignada.");
+                Pausar();
+                return;
+            }
+
+            Console.WriteLine("La persona está vinculada a " + empleado.Empresa.NombreComercial + ".");
+            Console.Write("¿Quieres desvincularla? (S/N): ");
+            if ((Console.ReadLine() ?? string.Empty).Trim()
+                .Equals("s", StringComparison.OrdinalIgnoreCase))
+            {
+                agenda.DesvincularEmpresa(empleado);
+                Console.WriteLine("Persona desvinculada. Sus datos se conservan.");
+            }
+            else Console.WriteLine("Operacion cancelada.");
+            Pausar();
+        }
+
+        private static bool PreguntarSiContinuar(string mensaje)
+        {
+            Console.Write(mensaje);
+            return (Console.ReadLine() ?? string.Empty).Trim()
+                .Equals("s", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void VerEmpresa()
+        {
+            Empleado empleado = LocalizarEmpleado("--- EMPRESA DE UNA PERSONA ---");
+            if (empleado == null) return;
+            if (empleado.Empresa == null)
+                Console.WriteLine("La persona no está vinculada a ninguna empresa.");
+            else
+            {
+                Console.WriteLine("Empresa vinculada:");
+                MostrarEmpresas(new List<Empresa> { empleado.Empresa });
+            }
+            Pausar();
+        }
+
+        private static void MostrarEmpresas(List<Empresa> lista)
+        {
+            Console.WriteLine("{0,-5} {1}", "ID", "Nombre comercial");
+            Console.WriteLine(new string('-', 45));
+            foreach (Empresa empresa in lista)
+                Console.WriteLine("{0,-5} {1}", empresa.Id, empresa.NombreComercial);
         }
 
         private Empleado LocalizarEmpleado(string titulo)

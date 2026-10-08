@@ -29,6 +29,7 @@ namespace AgendaEmpleados.UI
                     case 4: Modificar(); break;
                     case 5: Baja(); break;
                     case 6: Recuperar(); break;
+                    case 7: VerPlantilla(); break;
                     case 0: volver = true; break;
                     default:
                         Console.WriteLine("\nOpcion no valida. Elige un numero del menu.");
@@ -50,6 +51,7 @@ namespace AgendaEmpleados.UI
             Console.WriteLine("4. Modificar empresa");
             Console.WriteLine("5. Dar de baja empresa");
             Console.WriteLine("6. Recuperar empresa dada de baja");
+            Console.WriteLine("7. Ver plantilla de una empresa");
             Console.WriteLine("0. Volver al menu principal");
             Console.WriteLine("----------------------------------------");
         }
@@ -106,6 +108,16 @@ namespace AgendaEmpleados.UI
         {
             Empresa empresa = LocalizarActiva("--- BAJA DE EMPRESA ---");
             if (empresa == null) return;
+            List<Empleado> plantilla = empresas.ObtenerEmpleados(empresa);
+            if (plantilla.Count > 0)
+            {
+                Console.WriteLine("No se puede dar de baja esta empresa porque tiene " +
+                    plantilla.Count + " persona(s) vinculada(s).");
+                Console.WriteLine("La empresa se conserva y sigue visible hasta que desvincules " +
+                    "a todas las personas desde el menu de empleados.");
+                Pausar();
+                return;
+            }
             Console.Write("Confirma la baja (S/N): ");
             if ((Console.ReadLine() ?? string.Empty).Trim()
                 .Equals("s", StringComparison.OrdinalIgnoreCase))
@@ -115,6 +127,33 @@ namespace AgendaEmpleados.UI
             }
             else Console.WriteLine("Operacion cancelada.");
             Pausar();
+        }
+
+        private void VerPlantilla()
+        {
+            Empresa empresa = LocalizarActiva("--- PLANTILLA DE EMPRESA ---");
+            if (empresa == null) return;
+            List<Empleado> plantilla = empresas.ObtenerEmpleados(empresa);
+            Console.WriteLine("\nPlantilla de " + empresa.NombreComercial + ":");
+            if (plantilla.Count == 0)
+                Console.WriteLine("La empresa no tiene personas vinculadas.");
+            else
+                MostrarPlantilla(plantilla);
+            Pausar();
+        }
+
+        private static void MostrarPlantilla(List<Empleado> plantilla)
+        {
+            Console.WriteLine("{0,-5} {1,-25} {2,-12} {3}", "ID", "Nombre y apellidos",
+                "Telefono", "Correo");
+            Console.WriteLine(new string('-', 75));
+            foreach (Empleado empleado in plantilla)
+            {
+                string nombre = empleado.Nombre + " " + empleado.Apellidos;
+                Console.WriteLine("{0,-5} {1,-25} {2,-12} {3}", empleado.IdPersona,
+                    nombre.Length <= 25 ? nombre : nombre.Substring(0, 22) + "...",
+                    empleado.Telefono, empleado.Correo);
+            }
         }
 
         private void Recuperar()
