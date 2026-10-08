@@ -9,7 +9,11 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Models\Empleado.cs" />
+    <Compile Include="Models\Empresa.cs" />
     <Compile Include="Services\Agenda.cs" />
+    <Compile Include="Services\Empresas.cs" />
     <Compile Include="UI\ConsolaAgenda.cs" />
+    <Compile Include="UI\ConsolaEmpresas.cs" />
+    <Compile Include="UI\ConsolaMenuPrincipal.cs" />
   </ItemGroup>
 </Project>

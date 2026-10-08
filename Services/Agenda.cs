@@ -12,14 +12,14 @@ namespace AgendaEmpleados.Services
 
         public Agenda()
         {
-            AgregarEmpleado("Ana", "García López", "612345", "ana.garcia@ejemplo.com", "TecnoSur");
-            AgregarEmpleado("Carlos", "Martín Ruiz", "698765", "carlos.martin@empresa.es", "Soluciones Norte");
+            AgregarEmpleado("Ana", "García López", "612345", "ana.garcia@ejemplo.com");
+            AgregarEmpleado("Carlos", "Martín Ruiz", "698765", "carlos.martin@empresa.es");
         }
 
         public void AgregarEmpleado(string nombre, string apellidos, string telefono,
-            string correo, string empresa)
+            string correo)
         {
-            empleados.Add(new Empleado(siguienteId++, nombre, apellidos, telefono, correo, empresa));
+            empleados.Add(new Empleado(siguienteId++, nombre, apellidos, telefono, correo));
         }
 
         public List<Empleado> ObtenerOrdenados()
@@ -33,7 +33,6 @@ namespace AgendaEmpleados.Services
             return empleados.Where(empleado =>
                 empleado.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase) ||
                 empleado.Apellidos.Contains(texto, StringComparison.OrdinalIgnoreCase) ||
-                empleado.Empresa.Contains(texto, StringComparison.OrdinalIgnoreCase) ||
                 empleado.Telefono.Contains(texto, StringComparison.OrdinalIgnoreCase) ||
                 empleado.Correo.Contains(texto, StringComparison.OrdinalIgnoreCase)).ToList();
         }

@@ -1,4 +1,5 @@
 using AgendaEmpleados.UI;
+using AgendaEmpleados.Services;
 
 namespace AgendaEmpleados
 {
@@ -6,7 +7,11 @@ namespace AgendaEmpleados
     {
         private static void Main()
         {
-            new ConsolaAgenda().Ejecutar();
+            Agenda agenda = new Agenda();
+            Empresas empresas = new Empresas();
+            new ConsolaMenuPrincipal(
+                new ConsolaAgenda(agenda),
+                new ConsolaEmpresas(empresas)).Ejecutar();
         }
     }
 }

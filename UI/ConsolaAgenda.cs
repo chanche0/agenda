@@ -10,12 +10,17 @@ namespace AgendaEmpleados.UI
 {
     public class ConsolaAgenda
     {
-        private readonly Agenda agenda = new Agenda();
+        private readonly Agenda agenda;
+
+        public ConsolaAgenda(Agenda agenda)
+        {
+            this.agenda = agenda;
+        }
 
         public void Ejecutar()
         {
-            bool salir = false;
-            while (!salir)
+            bool volver = false;
+            while (!volver)
             {
                 MostrarMenu();
                 switch (LeerOpcion())
@@ -26,8 +31,7 @@ namespace AgendaEmpleados.UI
                     case 4: Modificar(); break;
                     case 5: Baja(); break;
                     case 0:
-                        salir = true;
-                        Console.WriteLine("\nPrograma finalizado. Hasta pronto.");
+                        volver = true;
                         break;
                     default:
                         Console.WriteLine("\nOpcion no valida. Elige un numero del menu.");
@@ -39,7 +43,7 @@ namespace AgendaEmpleados.UI
 
         private static void MostrarMenu()
         {
-            Console.Clear();
+            LimpiarPantalla();
             Console.WriteLine("========================================");
             Console.WriteLine("          AGENDA DE EMPLEADOS");
             Console.WriteLine("========================================");
@@ -48,7 +52,7 @@ namespace AgendaEmpleados.UI
             Console.WriteLine("3. Buscar empleado");
             Console.WriteLine("4. Modificar empleado");
             Console.WriteLine("5. Dar de baja empleado");
-            Console.WriteLine("0. Salir");
+            Console.WriteLine("0. Volver al menu principal");
             Console.WriteLine("----------------------------------------");
         }
 
@@ -60,21 +64,20 @@ namespace AgendaEmpleados.UI
 
         private void Alta()
         {
-            Console.Clear();
+            LimpiarPantalla();
             Console.WriteLine("--- ALTA DE EMPLEADO ---");
             string nombre = LeerTextoObligatorio("Nombre: ");
             string apellidos = LeerTextoObligatorio("Apellidos: ");
             string telefono = LeerTelefono();
             string correo = LeerCorreo();
-            string empresa = LeerTextoObligatorio("Empresa: ");
-            agenda.AgregarEmpleado(nombre, apellidos, telefono, correo, empresa);
+            agenda.AgregarEmpleado(nombre, apellidos, telefono, correo);
             Console.WriteLine("\nEmpleado añadido correctamente.");
             Pausar();
         }
 
         private static void Listado(List<Empleado> empleados)
         {
-            Console.Clear();
+            LimpiarPantalla();
             Console.WriteLine("--- LISTADO DE EMPLEADOS ---");
             if (empleados.Count == 0) Console.WriteLine("No hay empleados para mostrar.");
             else MostrarFilas(empleados);
@@ -83,9 +86,9 @@ namespace AgendaEmpleados.UI
 
         private void Busqueda()
         {
-            Console.Clear();
+            LimpiarPantalla();
             Console.WriteLine("--- BUSQUEDA ---");
-            string texto = LeerTextoObligatorio("Escribe nombre, apellido, empresa, telefono o correo: ");
+            string texto = LeerTextoObligatorio("Escribe nombre, apellido, telefono o correo: ");
             List<Empleado> resultados = agenda.Buscar(texto);
             if (resultados.Count == 0) Console.WriteLine("No se encontraron coincidencias.");
             else MostrarFilas(resultados);
@@ -101,7 +104,6 @@ namespace AgendaEmpleados.UI
             empleado.Apellidos = LeerTextoEditable("Apellidos", empleado.Apellidos);
             empleado.Telefono = LeerTelefono(empleado.Telefono);
             empleado.Correo = LeerCorreo(empleado.Correo);
-            empleado.Empresa = LeerTextoEditable("Empresa", empleado.Empresa);
             Console.WriteLine("\nEmpleado modificado correctamente.");
             Pausar();
         }
@@ -122,9 +124,9 @@ namespace AgendaEmpleados.UI
 
         private Empleado LocalizarEmpleado(string titulo)
         {
-            Console.Clear();
+            LimpiarPantalla();
             Console.WriteLine(titulo);
-            string texto = LeerTextoObligatorio("Busca por nombre, apellido, empresa o ID: ");
+            string texto = LeerTextoObligatorio("Busca por nombre, apellido o ID: ");
             List<Empleado> resultados;
             if (int.TryParse(texto, out int id))
             {
@@ -149,13 +151,13 @@ namespace AgendaEmpleados.UI
 
         private static void MostrarFilas(List<Empleado> empleados)
         {
-            Console.WriteLine("{0,-4} {1,-22} {2,-10} {3,-28} {4}", "ID", "Nombre y apellidos", "Telefono", "Correo", "Empresa");
-            Console.WriteLine(new string('-', 84));
+            Console.WriteLine("{0,-4} {1,-22} {2,-10} {3}", "ID", "Nombre y apellidos", "Telefono", "Correo");
+            Console.WriteLine(new string('-', 68));
             foreach (Empleado empleado in empleados)
             {
-                Console.WriteLine("{0,-4} {1,-22} {2,-10} {3,-28} {4}", empleado.IdPersona,
+                Console.WriteLine("{0,-4} {1,-22} {2,-10} {3}", empleado.IdPersona,
                     Ajustar(empleado.Nombre + " " + empleado.Apellidos, 22), empleado.Telefono,
-                    Ajustar(empleado.Correo, 28), empleado.Empresa);
+                    empleado.Correo);
             }
         }
 
@@ -225,6 +227,11 @@ namespace AgendaEmpleados.UI
         {
             Console.WriteLine("\nPulsa Enter para continuar...");
             Console.ReadLine();
+        }
+
+        private static void LimpiarPantalla()
+        {
+            if (!Console.IsOutputRedirected) Console.Clear();
         }
     }
 }
